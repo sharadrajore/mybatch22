@@ -2,10 +2,11 @@ package com.zensar.stockapplication.controllers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,19 +16,20 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zensar.stockapplication.entity.Stock;
 
 @RestController
+//@Controller
 //@CrossOrigin("*")
 // http://localhost:5000/stocks
-@RequestMapping("/stocks")
+@RequestMapping(value = "/stocks",produces = { MediaType.APPLICATION_XML_VALUE,
+		MediaType.APPLICATION_JSON_VALUE })
 public class StockController {
-	
-	
-	// CRUD C -> Created new stock ,R -> Read All stocks/we read perticular stock,U -> updated the stock , D -> deleted the stock
+
+	// CRUD C -> Created new stock ,R -> Read All stocks/we read perticular stock,U
+	// -> updated the stock , D -> deleted the stock
 
 	static List<Stock> stocks = new ArrayList<Stock>();
 
@@ -42,52 +44,64 @@ public class StockController {
 	 * stocks.add(new Stock(2L, "Zensar", "bse", 342)); }
 	 */
 
-	// http://localhost:5000/stocks/
-	
+	// http://localhost:5000/stocks/ -> GET
+
 	// Read all stocks
 
-	// @GetMapping("/stocks")
-	@RequestMapping(method = RequestMethod.GET)
+	@GetMapping() // Handler method
+	// @ResponseBody
+	// @RequestMapping(method = RequestMethod.GET)
 	public List<Stock> getAllStocks() {
 		return stocks;
 	}
-	
 
 	// Read a specific stock
 
 	// http://localhost:5000/stocks/2200 //@PathVariable
 	// @GetMapping("/stocks/{stockId}")
+	/*
+	 * @RequestMapping(value = "/{stockId}", method = RequestMethod.GET) public
+	 * Stock getStock(@PathVariable("stockId") long id) {
+	 * 
+	 * for (Stock stock : stocks) { if (stock.getStockId() == id) { return stock; }
+	 * }
+	 * 
+	 * return null;
+	 * 
+	 * }
+	 */
+
 	@RequestMapping(value = "/{stockId}", method = RequestMethod.GET)
 	public Stock getStock(@PathVariable("stockId") long id) {
 
-		for (Stock stock : stocks) {
-			if (stock.getStockId() == id) {
-				return stock;
-			}
-		}
+		Optional<Stock> stock1 = stocks.stream().filter(stock -> stock.getStockId() == id).findAny();
 
-		return null;
+		if (stock1.isPresent()) {
+			return stock1.get();
+		} else {
+			return stock1.orElseGet(() -> {
+				return new Stock();
+			});
+		}
 
 	}
 
-	
 	// Create a new stock
 	// http://localhost:5000/stocks - > POST
 	// @PostMapping("/stocks")
-	@RequestMapping( method = RequestMethod.POST)
-	public ResponseEntity<Stock> createStock(@RequestBody Stock stock,@RequestHeader("auth-token")String token) {
-		
-		if(token.equals("sr43993")) {
+	// @RequestMapping(method = RequestMethod.POST) 415
+	@PostMapping()
+	public ResponseEntity<Stock> createStock(@RequestBody Stock stock, @RequestHeader("auth-token") String token) {
+		System.out.println(stock);
+		if (token.equals("sr43993")) {
 			stocks.add(stock);
-		}else {
+		} else {
 			return new ResponseEntity<Stock>(HttpStatus.BAD_REQUEST);
 		}
 		return new ResponseEntity<Stock>(stock, HttpStatus.CREATED);
-	}  
-	
-	
-	
-    // Delete a specific stock
+	}
+
+	// Delete a specific stock
 	// http://localhost:5000/stocks/2 -> delete
 	@DeleteMapping("/{stockId}")
 	public String deleteStock(@PathVariable("stockId") long stockId) {
@@ -103,8 +117,8 @@ public class StockController {
 
 	// Update an existing stock
 	// http://localhost:5000/stocks/2 ->put,patch
-	@PutMapping("/{stockId}")
-	public Stock updateStock(@PathVariable int stockId,@RequestBody Stock stock) {
+	@PutMapping(value = "/{stockId}")
+	public Stock updateStock(@PathVariable int stockId, @RequestBody Stock stock) {
 		Stock availableStock = getStock(stockId);
 		availableStock.setMarketName(stock.getMarketName());
 		availableStock.setName(stock.getName());
@@ -112,17 +126,14 @@ public class StockController {
 
 		return availableStock;
 	}
-	
-	
+
 	// Delete all stocks
-	
-	// http://localhost:5000/stocks  - delete
+
+	// http://localhost:5000/stocks - delete
 	@DeleteMapping
-	public ResponseEntity<String> deleteAllStocks(){
-		return new ResponseEntity<String>("All stocks deleted successfullyyyy",HttpStatus.OK);
+	public ResponseEntity<String> deleteAllStocks() {
+		stocks.removeAll(stocks);
+		return new ResponseEntity<String>("All stocks are deleted successfullyyyy", HttpStatus.OK);
 	}
-	
-	
-	
 
 }
