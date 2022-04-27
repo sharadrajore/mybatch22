@@ -1,11 +1,9 @@
 package com.zensar.stockapplication.controllers;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,28 +14,33 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zensar.stockapplication.entity.Stock;
+import com.zensar.stockapplication.entity.StockRequest;
+import com.zensar.stockapplication.entity.StockResponse;
+import com.zensar.stockapplication.repository.StockRepository;
+import com.zensar.stockapplication.service.StockService;
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
 
 @RestController
 //@Controller
 //@CrossOrigin("*")
 // http://localhost:5000/stocks
-@RequestMapping(value = "/stocks",produces = { MediaType.APPLICATION_XML_VALUE,
-		MediaType.APPLICATION_JSON_VALUE })
+@RequestMapping(value = "/stocks")
+//@Api(value = "This is stock controller")
+
 public class StockController {
+
+	@Autowired
+	private StockService stockService;
 
 	// CRUD C -> Created new stock ,R -> Read All stocks/we read perticular stock,U
 	// -> updated the stock , D -> deleted the stock
-
-	static List<Stock> stocks = new ArrayList<Stock>();
-
-	static {
-		stocks.add(new Stock(1L, "RIL", "bse", 2610));
-		stocks.add(new Stock(2L, "Zensar", "bse", 342));
-
-	}
 
 	/*
 	 * public StockController() { stocks.add(new Stock(1L, "RIL", "bse", 2610));
@@ -48,11 +51,15 @@ public class StockController {
 
 	// Read all stocks
 
+	// http://localhost:5000/stocks?pageNumber=1&pageSize=5&sortBy=marketName
+	// @ApiIgnore
 	@GetMapping() // Handler method
-	// @ResponseBody
-	// @RequestMapping(method = RequestMethod.GET)
-	public List<Stock> getAllStocks() {
-		return stocks;
+	@ApiOperation(value = "Getting all stock info")
+	public List<StockResponse> getAllStocks(
+			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) int pageNumber,
+			@RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize) {
+
+		return stockService.getAllStocks(pageNumber, pageSize);
 	}
 
 	// Read a specific stock
@@ -72,18 +79,10 @@ public class StockController {
 	 */
 
 	@RequestMapping(value = "/{stockId}", method = RequestMethod.GET)
-	public Stock getStock(@PathVariable("stockId") long id) {
-
-		Optional<Stock> stock1 = stocks.stream().filter(stock -> stock.getStockId() == id).findAny();
-
-		if (stock1.isPresent()) {
-			return stock1.get();
-		} else {
-			return stock1.orElseGet(() -> {
-				return new Stock();
-			});
-		}
-
+	@ApiOperation("Getting stock based on stock id")
+	@ApiResponse(message = "Got the stock of given stock id", code = 200)
+	public StockResponse getStock(@ApiParam("stock id has to be greater than 1") @PathVariable("stockId") long id) {
+		return stockService.getStock(id);
 	}
 
 	// Create a new stock
@@ -91,40 +90,31 @@ public class StockController {
 	// @PostMapping("/stocks")
 	// @RequestMapping(method = RequestMethod.POST) 415
 	@PostMapping()
-	public ResponseEntity<Stock> createStock(@RequestBody Stock stock, @RequestHeader("auth-token") String token) {
-		System.out.println(stock);
-		if (token.equals("sr43993")) {
-			stocks.add(stock);
-		} else {
-			return new ResponseEntity<Stock>(HttpStatus.BAD_REQUEST);
+	public ResponseEntity<StockResponse> createStock(@RequestBody StockRequest stock,
+			@RequestHeader("auth-token") String token) {
+
+		StockResponse createStock = stockService.createStock(stock, token);
+
+		if (createStock == null) {
+			return new ResponseEntity<StockResponse>(HttpStatus.BAD_REQUEST);
 		}
-		return new ResponseEntity<Stock>(stock, HttpStatus.CREATED);
+
+		return new ResponseEntity<StockResponse>(createStock, HttpStatus.CREATED);
+
 	}
 
 	// Delete a specific stock
 	// http://localhost:5000/stocks/2 -> delete
 	@DeleteMapping("/{stockId}")
 	public String deleteStock(@PathVariable("stockId") long stockId) {
-
-		for (Stock stock : stocks) {
-			if (stock.getStockId() == stockId) {
-				stocks.remove(stock);
-				return "Stock deleted with stock id " + stockId;
-			}
-		}
-		return "Sorry,stock id is not available";
+		return stockService.deleteStock(stockId);
 	}
 
 	// Update an existing stock
 	// http://localhost:5000/stocks/2 ->put,patch
 	@PutMapping(value = "/{stockId}")
-	public Stock updateStock(@PathVariable int stockId, @RequestBody Stock stock) {
-		Stock availableStock = getStock(stockId);
-		availableStock.setMarketName(stock.getMarketName());
-		availableStock.setName(stock.getName());
-		availableStock.setPrice(stock.getPrice());
-
-		return availableStock;
+	public StockResponse updateStock(@PathVariable int stockId, @RequestBody StockRequest stock) {
+		return stockService.updateStock(stockId, stock);
 	}
 
 	// Delete all stocks
@@ -132,8 +122,9 @@ public class StockController {
 	// http://localhost:5000/stocks - delete
 	@DeleteMapping
 	public ResponseEntity<String> deleteAllStocks() {
-		stocks.removeAll(stocks);
-		return new ResponseEntity<String>("All stocks are deleted successfullyyyy", HttpStatus.OK);
+		String returnResult = stockService.deleteAllStocks();
+
+		return new ResponseEntity<String>(returnResult, HttpStatus.OK);
 	}
 
 }
