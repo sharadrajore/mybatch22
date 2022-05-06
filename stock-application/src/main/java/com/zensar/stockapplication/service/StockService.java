@@ -2,21 +2,24 @@ package com.zensar.stockapplication.service;
 
 import java.util.List;
 
-import com.zensar.stockapplication.entity.Stock;
-import com.zensar.stockapplication.entity.StockRequest;
-import com.zensar.stockapplication.entity.StockResponse;
+import com.zensar.stockapplication.dto.StockDto;
+import com.zensar.stockapplication.exceptions.InvalidStockIdException;
 
 public interface StockService {
 	
-	List<StockResponse> getAllStocks(int pageNumber,int pageSize);
+	List<StockDto> getAllStocks(int pageNumber,int pageSize);
 	
-	StockResponse getStock(long id);
+	StockDto getStock(long id) throws InvalidStockIdException;
 	
-	StockResponse createStock(StockRequest stock, String token);
+	List<StockDto> getStockByItsName(String stockName);
+	
+	List<StockDto> getStockByItsNameAndPrice(String stockName,double price);
+	
+	StockDto createStock(StockDto stock, String token);
 
 	String deleteStock(long stockId);
 	
-	StockResponse updateStock( int stockId,  StockRequest stock);
+	StockDto updateStock( int stockId,  StockDto stock) throws InvalidStockIdException;
 	
 	String deleteAllStocks();
 }

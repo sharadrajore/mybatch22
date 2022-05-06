@@ -1,15 +1,7 @@
 package com.zensar.stockapplication.config;
 
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-
-@Configuration
-public class SwaggerConfig {
+//@Configuration
+/*public class SwaggerConfig {
 
 	@Bean
 	public Docket getCustomizedDocket() {
@@ -26,4 +18,4 @@ public class SwaggerConfig {
 				"Sharad", "Apache", "http://www.apache.org/licenses/");
 	}
 
-}
+}*/

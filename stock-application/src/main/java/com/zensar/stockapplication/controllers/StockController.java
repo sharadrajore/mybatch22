@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,15 +18,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.zensar.stockapplication.entity.Stock;
-import com.zensar.stockapplication.entity.StockRequest;
-import com.zensar.stockapplication.entity.StockResponse;
-import com.zensar.stockapplication.repository.StockRepository;
+import com.zensar.stockapplication.dto.StockDto;
+import com.zensar.stockapplication.exceptions.InvalidStockIdException;
 import com.zensar.stockapplication.service.StockService;
-
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
 
 @RestController
 //@Controller
@@ -54,8 +49,8 @@ public class StockController {
 	// http://localhost:5000/stocks?pageNumber=1&pageSize=5&sortBy=marketName
 	// @ApiIgnore
 	@GetMapping() // Handler method
-	@ApiOperation(value = "Getting all stock info")
-	public List<StockResponse> getAllStocks(
+	//@ApiOperation(value = "Getting all stock info")
+	public List<StockDto> getAllStocks(
 			@RequestParam(value = "pageNumber", defaultValue = "0", required = false) int pageNumber,
 			@RequestParam(value = "pageSize", defaultValue = "5", required = false) int pageSize) {
 
@@ -77,12 +72,27 @@ public class StockController {
 	 * 
 	 * }
 	 */
+	
+	// http://localhost:5000/stocks/1 -> GET
 
 	@RequestMapping(value = "/{stockId}", method = RequestMethod.GET)
-	@ApiOperation("Getting stock based on stock id")
-	@ApiResponse(message = "Got the stock of given stock id", code = 200)
-	public StockResponse getStock(@ApiParam("stock id has to be greater than 1") @PathVariable("stockId") long id) {
+	//@ApiOperation("Getting stock based on stock id")
+	//@ApiResponse(message = "Got the stock of given stock id", code = 200)
+	//@ApiParam("stock id has to be greater than 1")
+	public StockDto getStock( @PathVariable("stockId") long id) throws InvalidStockIdException {
 		return stockService.getStock(id);
+	}
+	
+	// http://localhost:5000/stocks/name/RIL -> GET
+	@RequestMapping(value = "/name/{stockName}", method = RequestMethod.GET)
+	public List<StockDto> getStockByName(@PathVariable("stockName") String stockName){
+		return stockService.getStockByItsName(stockName);
+	}
+	
+	
+	@RequestMapping(value = "/name/{stockName}/price/{stockPrice}", method = RequestMethod.GET)
+	public List<StockDto> getStockByName(@PathVariable("stockName") String stockName,@PathVariable("stockPrice") double stockPrice){
+		return stockService.getStockByItsNameAndPrice(stockName,stockPrice);
 	}
 
 	// Create a new stock
@@ -90,16 +100,16 @@ public class StockController {
 	// @PostMapping("/stocks")
 	// @RequestMapping(method = RequestMethod.POST) 415
 	@PostMapping()
-	public ResponseEntity<StockResponse> createStock(@RequestBody StockRequest stock,
+	public ResponseEntity<StockDto> createStock(@RequestBody StockDto stock,
 			@RequestHeader("auth-token") String token) {
 
-		StockResponse createStock = stockService.createStock(stock, token);
+		StockDto createStock = stockService.createStock(stock, token);
 
 		if (createStock == null) {
-			return new ResponseEntity<StockResponse>(HttpStatus.BAD_REQUEST);
+			return new ResponseEntity<StockDto>(HttpStatus.BAD_REQUEST);
 		}
 
-		return new ResponseEntity<StockResponse>(createStock, HttpStatus.CREATED);
+		return new ResponseEntity<StockDto>(createStock, HttpStatus.CREATED);
 
 	}
 
@@ -113,7 +123,7 @@ public class StockController {
 	// Update an existing stock
 	// http://localhost:5000/stocks/2 ->put,patch
 	@PutMapping(value = "/{stockId}")
-	public StockResponse updateStock(@PathVariable int stockId, @RequestBody StockRequest stock) {
+	public StockDto updateStock(@PathVariable int stockId, @RequestBody StockDto stock) throws InvalidStockIdException {
 		return stockService.updateStock(stockId, stock);
 	}
 
@@ -126,5 +136,10 @@ public class StockController {
 
 		return new ResponseEntity<String>(returnResult, HttpStatus.OK);
 	}
+	
+	/*@ExceptionHandler(InvalidStockIdException.class)
+	public String handleExcletion() {
+		return "Invalid Stock id";
+	}*/
 
 }
