@@ -12,7 +12,9 @@ import org.springframework.context.annotation.Bean;
 public class StockApplication extends SpringBootServletInitializer{
 
 	public static void main(String[] args) {
+		
 		SpringApplication.run(StockApplication.class, args);  
+		System.out.println("Hello");
 
 	}
 	
