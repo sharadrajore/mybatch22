@@ -15,7 +15,7 @@ public class StockApplication extends SpringBootServletInitializer{
 		
 		SpringApplication.run(StockApplication.class, args);  
 		
-		System.out.println("Hi");
+		
 	}
 	
 	
