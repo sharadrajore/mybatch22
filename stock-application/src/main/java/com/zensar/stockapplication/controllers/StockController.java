@@ -99,10 +99,10 @@ public class StockController {
 	// http://localhost:5000/stocks - > POST
 	// @PostMapping("/stocks")
 	// @RequestMapping(method = RequestMethod.POST) 415
-	@PostMapping()
+	@PostMapping("/create")
 	public ResponseEntity<StockDto> createStock(@RequestBody StockDto stock,
 			@RequestHeader("auth-token") String token) {
-
+		System.out.println("******************ResponseEntity<StockDto> createStock*********");
 		StockDto createStock = stockService.createStock(stock, token);
 
 		if (createStock == null) {

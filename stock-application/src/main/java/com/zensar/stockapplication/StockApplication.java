@@ -13,9 +13,11 @@ public class StockApplication extends SpringBootServletInitializer{
 
 	public static void main(String[] args) {
 		
+		System.out.println(1==1);
 		SpringApplication.run(StockApplication.class, args);  
 		
 		
+		System.out.println(1==1);
 	}
 	
 	
@@ -36,3 +38,7 @@ public class StockApplication extends SpringBootServletInitializer{
 	}
 
 }
+
+
+
+
